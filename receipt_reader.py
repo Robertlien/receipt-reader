@@ -5,7 +5,7 @@ import io
 
 st.title("🧾 Receipt Reader")
 
-uploaded_file = st.file_uploader()
+uploaded_file = st.file_uploader("")
 
 def compress_image(image, max_size_kb=1024, max_width=1600):
     """Resize and compress image to stay under max_size_kb."""
