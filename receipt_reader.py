@@ -26,10 +26,10 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
 
 def parse_receipt_safe_total(text):
     """
-    Parse receipt and detect total robustly:
+    Parse receipt and include total in the table:
     - Detect 'Total', 'Order Total', etc. (case-insensitive)
     - Extract price even if no $ sign
-    - Stop parsing after total
+    - Add total as the last row in items
     """
     lines = text.splitlines()
     items = []
@@ -59,6 +59,8 @@ def parse_receipt_safe_total(text):
             price_match = re.search(price_pattern, line)
             if price_match:
                 total_price = f"${price_match.group(1)}"
+                # Add total as last row in the items table
+                items.append({"Item": line, "Price": total_price})
             break  # stop parsing after total
 
         # Parse item if $ present
@@ -73,6 +75,7 @@ def parse_receipt_safe_total(text):
             previous_item_name = line
 
     return date_time, items, total_price
+
 
 
 if uploaded_file is not None:
