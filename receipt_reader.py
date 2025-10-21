@@ -24,8 +24,11 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
-def parse_receipt_until_total(text):
-    """Parse receipt by $ symbol, use previous line if needed, stop after total."""
+def parse_receipt_safe_total(text):
+    """
+    Parse receipt by $ symbol and previous-line logic.
+    Stop parsing only if a total line with a valid price is found.
+    """
     lines = text.splitlines()
     items = []
     total_price = ""
@@ -47,13 +50,6 @@ def parse_receipt_until_total(text):
             if date_match or time_match:
                 date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
 
-        # Check for total first
-        if re.search(r"total", line, re.IGNORECASE):
-            price_match = re.search(r"\$([\d,.]+)", line)
-            if price_match:
-                total_price = f"${price_match.group(1)}"
-            break  # stop parsing after total
-
         # Parse item if $ present
         if "$" in line:
             parts = line.split("$", 1)
@@ -62,6 +58,11 @@ def parse_receipt_until_total(text):
             item_name = item_name_part if item_name_part else previous_item_name
             items.append({"Item": item_name, "Price": f"${price}"})
             previous_item_name = item_name
+
+            # Check if this line is total
+            if re.search(r"total", line, re.IGNORECASE):
+                total_price = f"${price}"
+                break  # stop parsing after total
         else:
             # Save this line as previous item name
             previous_item_name = line
@@ -107,8 +108,8 @@ if uploaded_file is not None:
                     st.subheader("Full OCR Text:")
                     st.text(parsed_text)
 
-                # Parse receipt until total
-                date_time, items, total_price = parse_receipt_until_total(parsed_text)
+                # Parse receipt safely with total check
+                date_time, items, total_price = parse_receipt_safe_total(parsed_text)
 
                 st.subheader("Receipt Summary:")
                 st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
@@ -116,7 +117,7 @@ if uploaded_file is not None:
                 if items:
                     st.table(items)
                 
-                if total_price:
+                if total_price and not any(re.search(r"total", i["Item"], re.IGNORECASE) for i in items):
                     st.write(f"**Total:** {total_price}")
 
         except requests.exceptions.RequestException as e:
@@ -125,3 +126,4 @@ if uploaded_file is not None:
             st.error(f"⚠️ Unexpected error: {e}")
 else:
     st.info("📤 Please upload a receipt image to start.")
+
