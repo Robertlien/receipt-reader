@@ -129,7 +129,7 @@ if uploaded_file is not None:
                 parsed_text = result["ParsedResults"][0]["ParsedText"]
 
                 # Toggle to show original OCR text
-                if st.checkbox("Show original OCR text"):
+                with st.expander("Show original OCR text"):
                     st.subheader("Full OCR Text:")
                     st.text(parsed_text)
 
