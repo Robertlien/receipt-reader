@@ -8,6 +8,17 @@ st.title("🧾 Receipt Reader")
 
 uploaded_file = st.file_uploader("", help="Please upload an image file under 1 MB.")
 
+selected_key = st.radio(
+    "Select OCR API key",
+    ("Key 1", "Key 2")
+)
+
+api_key = ""
+if selected_key == "Key 1":
+    api_key = st.secrets["OCR_SPACE_API_KEY_1"]
+elif selected_key == "Key 2":
+    api_key = st.secrets["OCR_SPACE_API_KEY_2"]
+
 def compress_image(image, max_size_kb=1024, max_width=1600):
     if image.width > max_width:
         ratio = max_width / float(image.width)
@@ -91,7 +102,6 @@ if uploaded_file is not None:
     st.write(f"📦 Compressed image size: {compressed_size:.1f} KB")
 
     url_api = "https://api.ocr.space/parse/image"
-    api_key = st.secrets.get("OCR_SPACE_API_KEY", "")
 
     payload = {
         "language": "eng",
