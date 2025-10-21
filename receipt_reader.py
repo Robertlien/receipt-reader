@@ -24,7 +24,7 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
-def parse_receipt_with_order_total(text):
+def parse_receipt_safe_total(text):
     """
     Parse receipt and include Sub Total and Order Total in table:
     - Any line containing 'total' is included in the table
