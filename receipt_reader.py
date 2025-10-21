@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from PIL import Image
 import io
+import re
 
 st.title("🧾 Receipt Reader")
 
@@ -9,13 +10,11 @@ uploaded_file = st.file_uploader("", help="Please upload an image file under 1�
 
 def compress_image(image, max_size_kb=1024, max_width=1600):
     """Resize and compress image to stay under max_size_kb."""
-    # Resize if width is too large
     if image.width > max_width:
         ratio = max_width / float(image.width)
         new_height = int(image.height * ratio)
         image = image.resize((max_width, new_height))
 
-    # Compress iteratively
     quality = 90
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG", quality=quality)
@@ -26,11 +25,39 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
+def parse_receipt(text):
+    """Basic parsing of receipt text into items and prices."""
+    lines = text.splitlines()
+    items = []
+    total_price = ""
+    date_time = ""
+    
+    date_pattern = r"\b\d{2}[/-]\d{2}[/-]\d{2,4}\b"
+    time_pattern = r"\b\d{1,2}:\d{2}\b"
+    
+    for line in lines:
+        if not date_time:
+            date_match = re.search(date_pattern, line)
+            time_match = re.search(time_pattern, line)
+            if date_match or time_match:
+                date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
+        
+        if re.search(r"total", line, re.IGNORECASE):
+            price_match = re.search(r"[\d,.]+", line)
+            if price_match:
+                total_price = price_match.group()
+        else:
+            price_match = re.search(r"([\d,.]+)$", line.strip())
+            if price_match:
+                item_name = line[:price_match.start()].strip()
+                items.append({"Item": item_name, "Price": price_match.group()})
+    
+    return date_time, items, total_price
+
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Receipt", use_container_width=True)
 
-    # Compress before sending
     compressed_image = compress_image(image)
     compressed_size = len(compressed_image.getvalue()) / 1024
     st.write(f"📦 Compressed image size: {compressed_size:.1f} KB")
@@ -60,8 +87,23 @@ if uploaded_file is not None:
                     st.json(result)
             else:
                 parsed_text = result["ParsedResults"][0]["ParsedText"]
-                st.subheader("Extracted Text:")
-                st.text(parsed_text)
+
+                # Add toggle to show original OCR text
+                if st.checkbox("Show original OCR text"):
+                    st.subheader("Full OCR Text:")
+                    st.text(parsed_text)
+
+                # Parse the text into table
+                date_time, items, total_price = parse_receipt(parsed_text)
+
+                st.subheader("Receipt Summary:")
+                st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
+                
+                if items:
+                    st.table(items)
+                
+                if total_price:
+                    st.write(f"**Total:** {total_price}")
 
         except requests.exceptions.RequestException as e:
             st.error(f"⚠️ Network or API error: {e}")
@@ -69,3 +111,4 @@ if uploaded_file is not None:
             st.error(f"⚠️ Unexpected error: {e}")
 else:
     st.info("📤 Please upload a receipt image to start.")
+
