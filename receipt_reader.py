@@ -117,7 +117,7 @@ if uploaded_file is not None:
                 if items:
                     st.table(items)
                 
-                if total_price and not any(re.search(r"total", i["Item"], re.IGNORECASE) for i in items):
+                if total_price and not any(re.search(r"\btotal\b", i["Item"], re.IGNORECASE) for i in items):
                     st.write(f"**Total:** {total_price}")
 
         except requests.exceptions.RequestException as e:
