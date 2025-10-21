@@ -26,9 +26,10 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
 
 def parse_receipt_safe_total(text):
     """
-    Parse receipt and include Sub Total and Order Total in table:
-    - Any line containing 'total' is included in the table
-    - 'Order Total' line marks the final total and stops parsing
+    Parse receipt:
+    - Regular items are detected by $ or previous line
+    - Only 'Order Total' triggers final total and stops parsing
+    - Sub Total or other totals are included in the table if they have a price
     """
     lines = text.splitlines()
     items = []
@@ -52,21 +53,7 @@ def parse_receipt_safe_total(text):
             if date_match or time_match:
                 date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
 
-        # Check for any total line
-        if re.search(r"\btotal\b", line, re.IGNORECASE):
-            # Extract the first number after total
-            price_match = re.search(price_pattern, line)
-            if price_match:
-                price_value = f"${price_match.group(1)}"
-                items.append({"Item": line, "Price": price_value})
-
-                # If this is Order Total, mark final total and stop parsing
-                if re.search(r"order total", line, re.IGNORECASE):
-                    total_price = price_value
-                    break
-            continue  # skip to next line after adding Sub Total or other totals
-
-        # Parse regular item with $ if present
+        # Parse item if $ present
         if "$" in line:
             parts = line.split("$", 1)
             item_name_part = parts[0].strip()
@@ -74,8 +61,14 @@ def parse_receipt_safe_total(text):
             item_name = item_name_part if item_name_part else previous_item_name
             items.append({"Item": item_name, "Price": f"${price}"})
             previous_item_name = item_name
+
+            # Check if line is Order Total
+            if re.search(r"order total", line, re.IGNORECASE):
+                total_price = f"${price}"
+                break  # stop parsing after Order Total
+
         else:
-            previous_item_name = line
+            previous_item_name = line  # store previous line for next item
 
     return date_time, items, total_price
 
