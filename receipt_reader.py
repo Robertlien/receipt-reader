@@ -23,7 +23,7 @@ uploaded_file = st.file_uploader("Upload a receipt image", type=["png", "jpg", "
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Receipt", use_column_width=True)
+    st.image(image, caption="Uploaded Receipt", use_container_width=True)
 
     # Use OCR.Space free API (no key needed for demo)
     url_api = "https://api.ocr.space/parse/image"
