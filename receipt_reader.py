@@ -26,8 +26,10 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
 
 def parse_receipt_safe_total(text):
     """
-    Parse receipt by $ symbol and previous-line logic.
-    Stop parsing only if a total line with a valid price is found.
+    Parse receipt and detect total robustly:
+    - Detect 'Total', 'Order Total', etc. (case-insensitive)
+    - Extract price even if no $ sign
+    - Stop parsing after total
     """
     lines = text.splitlines()
     items = []
@@ -37,18 +39,27 @@ def parse_receipt_safe_total(text):
 
     date_pattern = r"\b\d{2}[/-]\d{2}[/-]\d{2,4}\b"
     time_pattern = r"\b\d{1,2}:\d{2}\b"
+    price_pattern = r"\$?([\d,.]+)"  # Matches numbers with optional $
 
     for line in lines:
         line = line.strip()
         if not line:
             continue
 
-        # Date/time detection
+        # Detect date/time
         if not date_time:
             date_match = re.search(date_pattern, line)
             time_match = re.search(time_pattern, line)
             if date_match or time_match:
                 date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
+
+        # Check if line contains total first
+        if re.search(r"\btotal\b", line, re.IGNORECASE):
+            # Extract the first number after total (with or without $)
+            price_match = re.search(price_pattern, line)
+            if price_match:
+                total_price = f"${price_match.group(1)}"
+            break  # stop parsing after total
 
         # Parse item if $ present
         if "$" in line:
@@ -58,16 +69,11 @@ def parse_receipt_safe_total(text):
             item_name = item_name_part if item_name_part else previous_item_name
             items.append({"Item": item_name, "Price": f"${price}"})
             previous_item_name = item_name
-
-            # Check if this line is total
-            if re.search(r"total", line, re.IGNORECASE):
-                total_price = f"${price}"
-                break  # stop parsing after total
         else:
-            # Save this line as previous item name
             previous_item_name = line
 
     return date_time, items, total_price
+
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
