@@ -36,6 +36,8 @@ def parse_receipt_safe_total(text):
     total_price = ""
     date_time = ""
     previous_item_name = ""
+    found_date = None
+    found_time = None
 
     date_pattern = r"\b\d{1,2}/\d{1,2}/\d{4}\b"  # e.g., 8/21/2025
     time_pattern = r"\b\d{1,2}:\d{2}:\d{2}\b\S*"  # e.g., 2:26:10 PM
@@ -48,10 +50,16 @@ def parse_receipt_safe_total(text):
 
         # Detect date/time
         if not date_time:
-            date_match = re.search(date_pattern, line)
-            time_match = re.search(time_pattern, line)
-            if date_match or time_match:
-                date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
+            if not found_date:
+                date_match = re.search(date_pattern, line)
+                if date_match:
+                    found_date = date_match.group()
+            if not found_time:
+                time_match = re.search(time_pattern, line)
+                if time_match:
+                    found_time = time_match.group()
+        date_time = f"{found_date if found_date else ''} {found_time if found_time else ''}".strip()
+
         # Parse item if $ present
         if "$" in line:
             parts = line.split("$", 1)
