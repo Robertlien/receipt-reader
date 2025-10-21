@@ -1,11 +1,11 @@
 import streamlit as st
 import requests
 from PIL import Image
-import io, os, json
+import io
 
-st.title("🧾 Free Receipt Reader")
+st.title("🧾 Receipt Reader")
 
-uploaded_file = st.file_uploader("Upload a receipt image", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload a receipt image")
 
 def compress_image(image, max_size_kb=1024, max_width=1600):
     """Resize and compress image to stay under max_size_kb."""
@@ -69,17 +69,3 @@ if uploaded_file is not None:
             st.error(f"⚠️ Unexpected error: {e}")
 else:
     st.info("📤 Please upload a receipt image to start.")
-
-def increment_usage():
-    path = "usage_count.json"
-    if os.path.exists(path):
-        data = json.load(open(path))
-    else:
-        data = {"count": 0}
-
-    data["count"] += 1
-    json.dump(data, open(path, "w"))
-    return data["count"]
-
-count = increment_usage()
-st.caption(f"🔢 Local usage count this month: {count}")
