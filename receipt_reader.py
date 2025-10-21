@@ -24,8 +24,8 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
-def parse_receipt_by_dollar_with_continuation(text):
-    """Parse receipt by $ symbol and use previous line if item name missing."""
+def parse_receipt_until_total(text):
+    """Parse receipt by $ symbol, use previous line if needed, stop after total."""
     lines = text.splitlines()
     items = []
     total_price = ""
@@ -47,19 +47,23 @@ def parse_receipt_by_dollar_with_continuation(text):
             if date_match or time_match:
                 date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
 
+        # Check for total first
+        if re.search(r"total", line, re.IGNORECASE):
+            price_match = re.search(r"\$([\d,.]+)", line)
+            if price_match:
+                total_price = f"${price_match.group(1)}"
+            break  # stop parsing after total
+
+        # Parse item if $ present
         if "$" in line:
             parts = line.split("$", 1)
             item_name_part = parts[0].strip()
             price = parts[1].strip()
-            # Use previous line if item_name_part is empty
             item_name = item_name_part if item_name_part else previous_item_name
             items.append({"Item": item_name, "Price": f"${price}"})
-            previous_item_name = item_name  # update previous item
-            # Check if this line is total
-            if re.search(r"total", line, re.IGNORECASE):
-                total_price = f"${price}"
+            previous_item_name = item_name
         else:
-            # Save this line for potential use if next line has $
+            # Save this line as previous item name
             previous_item_name = line
 
     return date_time, items, total_price
@@ -103,8 +107,8 @@ if uploaded_file is not None:
                     st.subheader("Full OCR Text:")
                     st.text(parsed_text)
 
-                # Parse receipt with continuation logic
-                date_time, items, total_price = parse_receipt_by_dollar_with_continuation(parsed_text)
+                # Parse receipt until total
+                date_time, items, total_price = parse_receipt_until_total(parsed_text)
 
                 st.subheader("Receipt Summary:")
                 st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
