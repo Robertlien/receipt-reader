@@ -37,8 +37,8 @@ def parse_receipt_safe_total(text):
     date_time = ""
     previous_item_name = ""
 
-    date_pattern = r"\b\d{2}[/-]\d{2}[/-]\d{2,4}\b"
-    time_pattern = r"\b\d{1,2}:\d{2}\b"
+    date_pattern = r"\b\d{1,2}/\d{1,2}/\d{4}\b"  # e.g., 8/21/2025
+    time_pattern = r"\b\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?\b"  # e.g., 2:26:10 PM
     price_pattern = r"\$?([\d,.]+)"  # Matches numbers with optional $
 
     for line in lines:
