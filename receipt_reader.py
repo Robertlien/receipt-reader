@@ -69,3 +69,17 @@ if uploaded_file is not None:
             st.error(f"⚠️ Unexpected error: {e}")
 else:
     st.info("📤 Please upload a receipt image to start.")
+
+def increment_usage():
+    path = "usage_count.json"
+    if os.path.exists(path):
+        data = json.load(open(path))
+    else:
+        data = {"count": 0}
+
+    data["count"] += 1
+    json.dump(data, open(path, "w"))
+    return data["count"]
+
+count = increment_usage()
+st.caption(f"🔢 Local usage count this month: {count}")
