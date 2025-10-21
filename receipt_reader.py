@@ -63,7 +63,7 @@ def parse_receipt_safe_total(text):
             previous_item_name = item_name
 
             # Check if line is Order Total
-            if re.search(r"order total", line, re.IGNORECASE):
+            if re.search(r"order total", item_name, re.IGNORECASE):
                 total_price = f"${price}"
                 break  # stop parsing after Order Total
 
