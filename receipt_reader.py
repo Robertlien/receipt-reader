@@ -28,7 +28,7 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Receipt", use_column_width=True)
+    st.image(image, caption="Uploaded Receipt", use_container_width=True)
 
     # Compress before sending
     compressed_image = compress_image(image)
