@@ -57,7 +57,7 @@ def parse_receipt_safe_total(text):
             if time_match:
                 found_time = time_match.group()
             if date_match or time_match:
-                date_time = f"{found_date if date_match else ''} {found_time if time_match else ''}".strip()
+                date_time = f"{found_date if found_date else ''} {found_time if found_time else ''}".strip()
 
         # Parse item if $ present
         if "$" in line:
