@@ -89,7 +89,8 @@ if uploaded_file is not None:
     payload = {
         "language": "eng",
         "apikey": api_key,
-        "OCREngine": 2
+        "OCREngine": 2,
+        "detectOrientation": True
     }
 
     files = {
