@@ -24,12 +24,11 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
-def parse_receipt_safe_total(text):
+def parse_receipt_with_order_total(text):
     """
-    Parse receipt and include total in the table:
-    - Detect 'Total', 'Order Total', etc. (case-insensitive)
-    - Extract price even if no $ sign
-    - Add total as the last row in items
+    Parse receipt and include Sub Total and Order Total in table:
+    - Any line containing 'total' is included in the table
+    - 'Order Total' line marks the final total and stops parsing
     """
     lines = text.splitlines()
     items = []
@@ -53,17 +52,21 @@ def parse_receipt_safe_total(text):
             if date_match or time_match:
                 date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
 
-        # Check if line contains total first
+        # Check for any total line
         if re.search(r"\btotal\b", line, re.IGNORECASE):
-            # Extract the first number after total (with or without $)
+            # Extract the first number after total
             price_match = re.search(price_pattern, line)
             if price_match:
-                total_price = f"${price_match.group(1)}"
-                # Add total as last row in the items table
-                items.append({"Item": line, "Price": total_price})
-            break  # stop parsing after total
+                price_value = f"${price_match.group(1)}"
+                items.append({"Item": line, "Price": price_value})
 
-        # Parse item if $ present
+                # If this is Order Total, mark final total and stop parsing
+                if re.search(r"order total", line, re.IGNORECASE):
+                    total_price = price_value
+                    break
+            continue  # skip to next line after adding Sub Total or other totals
+
+        # Parse regular item with $ if present
         if "$" in line:
             parts = line.split("$", 1)
             item_name_part = parts[0].strip()
@@ -75,6 +78,7 @@ def parse_receipt_safe_total(text):
             previous_item_name = line
 
     return date_time, items, total_price
+
 
 
 
