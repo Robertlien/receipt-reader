@@ -27,7 +27,7 @@ if uploaded_file is not None:
 
     # Use OCR.Space free API (no key needed for demo)
     url_api = "https://api.ocr.space/parse/image"
-    api_key = "K85288317988957"  # 🔑 <-- Replace this
+    api_key = st.secrets["OCR_SPACE_API_KEY"]  # 🔑 <-- Replace this
 
     payload = {
         "language": "eng",
