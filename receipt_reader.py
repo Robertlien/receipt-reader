@@ -5,19 +5,20 @@ import io
 import re
 
 st.title("🧾 Receipt Reader")
+with st.expander("🔑 Select OCR API Key", expanded=True):
+    selected_key = st.radio(
+        "Choose which key to use:",
+        ("Key 1", "Key 2")
+    )
 
+    if selected_key == "Key 1":
+        api_key = st.secrets["OCR_SPACE_API_KEY_1"]
+    elif selected_key == "Key 2":
+        api_key = st.secrets["OCR_SPACE_API_KEY_2"]
+
+    st.markdown(f"**Active Key:** {selected_key}")
 uploaded_file = st.file_uploader("", help="Please upload an image file under 1 MB.")
 
-selected_key = st.radio(
-    "Select OCR API key",
-    ("Key 1", "Key 2")
-)
-
-api_key = ""
-if selected_key == "Key 1":
-    api_key = st.secrets["OCR_SPACE_API_KEY_1"]
-elif selected_key == "Key 2":
-    api_key = st.secrets["OCR_SPACE_API_KEY_2"]
 
 def compress_image(image, max_size_kb=1024, max_width=1600):
     if image.width > max_width:
