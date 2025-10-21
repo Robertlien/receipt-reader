@@ -9,7 +9,6 @@ st.title("🧾 Receipt Reader")
 uploaded_file = st.file_uploader("", help="Please upload an image file under 1 MB.")
 
 def compress_image(image, max_size_kb=1024, max_width=1600):
-    """Resize and compress image to stay under max_size_kb."""
     if image.width > max_width:
         ratio = max_width / float(image.width)
         new_height = int(image.height * ratio)
@@ -25,36 +24,44 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
-def parse_receipt_by_dollar(text):
-    """Parse receipt text by looking for $ prices."""
+def parse_receipt_by_dollar_with_continuation(text):
+    """Parse receipt by $ symbol and use previous line if item name missing."""
     lines = text.splitlines()
     items = []
     total_price = ""
     date_time = ""
-    
-    # Simple date/time regex
+    previous_item_name = ""
+
     date_pattern = r"\b\d{2}[/-]\d{2}[/-]\d{2,4}\b"
     time_pattern = r"\b\d{1,2}:\d{2}\b"
-    
+
     for line in lines:
-        # Date/time
+        line = line.strip()
+        if not line:
+            continue
+
+        # Date/time detection
         if not date_time:
             date_match = re.search(date_pattern, line)
             time_match = re.search(time_pattern, line)
             if date_match or time_match:
                 date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
-        
-        # Look for $ in line
+
         if "$" in line:
-            parts = line.split("$")
-            item_name = parts[0].strip()
-            price = parts[1].strip() if len(parts) > 1 else ""
+            parts = line.split("$", 1)
+            item_name_part = parts[0].strip()
+            price = parts[1].strip()
+            # Use previous line if item_name_part is empty
+            item_name = item_name_part if item_name_part else previous_item_name
             items.append({"Item": item_name, "Price": f"${price}"})
-            
+            previous_item_name = item_name  # update previous item
             # Check if this line is total
             if re.search(r"total", line, re.IGNORECASE):
                 total_price = f"${price}"
-    
+        else:
+            # Save this line for potential use if next line has $
+            previous_item_name = line
+
     return date_time, items, total_price
 
 if uploaded_file is not None:
@@ -96,8 +103,8 @@ if uploaded_file is not None:
                     st.subheader("Full OCR Text:")
                     st.text(parsed_text)
 
-                # Parse receipt by $ sign
-                date_time, items, total_price = parse_receipt_by_dollar(parsed_text)
+                # Parse receipt with continuation logic
+                date_time, items, total_price = parse_receipt_by_dollar_with_continuation(parsed_text)
 
                 st.subheader("Receipt Summary:")
                 st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
