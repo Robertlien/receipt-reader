@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from PIL import Image
-import io
+import io, os, json
 
 st.title("🧾 Free Receipt Reader")
 
