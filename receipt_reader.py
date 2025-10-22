@@ -7,6 +7,7 @@ import re
 st.title("🧾 Receipt Reader")
 with st.expander("Select OCR API 🔑", expanded=False):
     selected_key = st.radio(
+        "",
         ("Key 1", "Key 2")
     )
 
