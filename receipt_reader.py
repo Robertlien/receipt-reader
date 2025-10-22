@@ -161,19 +161,19 @@ if uploaded_file is not None:
                 # Parse receipt safely with total check
                 date_time, items, total_price, grouped_df = parse_receipt_safe_total(result)
 
-                # Toggle to show original OCR text
-                with st.expander("Show original OCR text"):
-                    st.subheader("Full OCR Text:")
-                    st.text(grouped_df)
-
                 st.subheader("Receipt Summary:")
                 st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
                 
                 if items:
                     st.table(items)
                 
-                if total_price and not any(re.search(r"\btotal\b", i["Item"], re.IGNORECASE) for i in items):
+                if total_price:
                     st.write(f"**Total:** {total_price}")
+                    
+                # Toggle to show original OCR text
+                with st.expander("Show original OCR text"):
+                    st.subheader("Full OCR Text:")
+                    st.text(grouped_df)
 
         except requests.exceptions.RequestException as e:
             st.error(f"⚠️ Network or API error: {e}")
