@@ -176,8 +176,8 @@ if uploaded_file is not None:
                         """,
                         unsafe_allow_html=True
                     )
-                                if items:
-                                    st.table(items)
+                if items:
+                    st.table(items)
                     
                 # Toggle to show original OCR text
                 with st.expander("Show original OCR text"):
