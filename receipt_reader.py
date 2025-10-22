@@ -10,7 +10,8 @@ with st.expander("Select OCR API 🔑", expanded=False):
     selected_key = st.radio(
         "Select API Key",  # Add a small label (optional)
         ("Key 1", "Key 2"),
-        label_visibility="collapsed"  # hides the label to remove space
+        label_visibility="collapsed",  # hides the label to remove space
+        horizontal=True
     )
 
     if selected_key == "Key 1":
