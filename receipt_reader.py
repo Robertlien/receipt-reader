@@ -154,10 +154,10 @@ if uploaded_file is not None:
                 with st.expander("See full API response"):
                     st.json(result)
             else:
-                parsed_text = result["ParsedResults"][0]["ParsedText"]
+                pass
 
                 # Parse receipt safely with total check
-                date_time, items, total_price, grouped_df = parse_receipt_safe_total(parsed_text)
+                date_time, items, total_price, grouped_df = parse_receipt_safe_total(result)
 
                 # Toggle to show original OCR text
                 with st.expander("Show original OCR text"):
