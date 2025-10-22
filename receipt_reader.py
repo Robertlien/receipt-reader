@@ -109,7 +109,8 @@ if uploaded_file is not None:
         "language": "eng",
         "apikey": api_key,
         "OCREngine": 2,
-        "detectOrientation": True
+        "detectOrientation": True,
+        "IsOverlayRequired": True
     }
 
     files = {
