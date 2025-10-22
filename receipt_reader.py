@@ -161,10 +161,12 @@ if uploaded_file is not None:
                 # Parse receipt safely with total check
                 date_time, items, total_price, grouped_df = parse_receipt_safe_total(result)
 
-                st.subheader("Receipt Summary:")
                 col1, col2 = st.columns(2)
 
                 with col1:
+                    st.subheader("Receipt Summary:")
+                
+                with col2:
                     st.markdown(
                         f"""
                         <div style='display:flex; align-items:flex-end; height:40px; color:gray; font-size:14px;'>
@@ -173,8 +175,6 @@ if uploaded_file is not None:
                         """,
                         unsafe_allow_html=True
                     )
-                
-                with col2:
                     if total_price:
                         st.markdown(
                             f"""
