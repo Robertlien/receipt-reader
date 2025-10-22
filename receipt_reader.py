@@ -165,10 +165,7 @@ if uploaded_file is not None:
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.markdown(
-                        f"<h4 style='font-size:22px;'>Date/Time: {date_time if date_time else 'Unknown'}</h4>",
-                        unsafe_allow_html=True
-                    )
+                    st.caption(f"Date/Time: {date_time if date_time else 'Unknown'}")
                 
                 with col2:
                     if total_price:
