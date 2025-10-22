@@ -162,13 +162,23 @@ if uploaded_file is not None:
                 date_time, items, total_price, grouped_df = parse_receipt_safe_total(result)
 
                 st.subheader("Receipt Summary:")
-                st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown(
+                        f"<h4 style='font-size:18px;'>Date/Time: "
+                        f"{date_time if date_time else 'Unknown'}</h4>",
+                        unsafe_allow_html=True
+                    )
                 
+                with col2:
+                    if total_price:
+                        st.markdown(
+                            f"<h4 style='font-size:22px; text-align:right;'>💰 Total: {total_price}</h4>",
+                            unsafe_allow_html=True
+                        )
                 if items:
                     st.table(items)
-                
-                if total_price:
-                    st.write(f"**Total:** {total_price}")
                     
                 # Toggle to show original OCR text
                 with st.expander("Show original OCR text"):
