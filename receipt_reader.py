@@ -37,60 +37,86 @@ def compress_image(image, max_size_kb=1024, max_width=1600):
     buffer.seek(0)
     return buffer
 
-def parse_receipt_safe_total(text):
-    """
-    Parse receipt:
-    - Regular items are detected by $ or previous line
-    - Only 'Order Total' triggers final total and stops parsing
-    - Sub Total or other totals are included in the table if they have a price
-    """
-    lines = text.splitlines()
-    items = []
-    total_price = ""
+def parse_receipt_safe_total(result, height_tolerance=10):
+    """Parse OCR receipt results into structured data (date/time, items, total)."""
+    parsed = result.get("ParsedResults", [{}])[0]
+    lines = parsed.get("TextOverlay", {}).get("Lines", [])
+
+    # === Regex patterns ===
+    date_pattern  = r"\b\d{1,2}/\d{1,2}/\d{4}\b"
+    time_pattern  = r"\b\d{1,2}:\d{2}:\d{2}(?:\s*[APMapm]{2})?\b"
+    price_pattern = r"(-?\$|\$-)\s*([\d,.]+)"
+
+    # === Build DataFrame from OCR overlay ===
+    rows = [
+        {
+            "text": line["LineText"],
+            "top": min(w["Top"] for w in line["Words"]),
+            "left": min(w["Left"] for w in line["Words"]),
+        }
+        for line in lines if line.get("LineText")
+    ]
+    if not rows:
+        return "", [], "", pd.DataFrame()
+
+    df = pd.DataFrame(rows).sort_values(["top", "left"]).reset_index(drop=True)
+
+    # === Group lines with similar vertical position ===
+    grouped_lines, current_group, current_top = [], [], None
+    for _, row in df.iterrows():
+        if current_top is None or abs(row["top"] - current_top) <= height_tolerance:
+            current_group.append(row)
+            current_top = row["top"] if current_top is None else current_top
+        else:
+            merged_text = " ".join(
+                [r["text"] for r in sorted(current_group, key=lambda x: x["left"])]
+            )
+            grouped_lines.append({"text": merged_text, "top": current_top})
+            current_group, current_top = [row], row["top"]
+
+    # Add the final group
+    if current_group:
+        merged_text = " ".join(
+            [r["text"] for r in sorted(current_group, key=lambda x: x["left"])]
+        )
+        grouped_lines.append({"text": merged_text, "top": current_top})
+
+    grouped_df = pd.DataFrame(grouped_lines).sort_values("top")
+
+    # === Extract date/time ===
     date_time = ""
-    previous_item_name = ""
-    found_date = None
-    found_time = None
+    for text in grouped_df["text"]:
+        date_match = re.search(date_pattern, text)
+        time_match = re.search(time_pattern, text)
+        if date_match or time_match:
+            date_time = f"{date_match.group() if date_match else ''} {time_match.group() if time_match else ''}".strip()
+            break
 
-    date_pattern = r"\b\d{1,2}/\d{1,2}/\d{4}\b"  # e.g., 8/21/2025
-    time_pattern = r"\b\d{1,2}:\d{2}:\d{2}\b\S*"  # e.g., 2:26:10 PM
-    price_pattern = r"\$?([\d,.]+)"  # Matches numbers with optional $
-
-    for line in lines:
-        line = line.strip()
-        if not line:
+    # === Extract items + prices ===
+    items, total_price, previous_item = [], "", ""
+    for _, row in grouped_df.iterrows():
+        line = row["text"]
+        price_match = re.search(price_pattern, line)
+        if not price_match:
+            previous_item = line
             continue
 
-        # Detect date/time
-        if not date_time:
-            if not found_date:
-                date_match = re.search(date_pattern, line)
-                if date_match:
-                    found_date = date_match.group()
-            if not found_time:
-                time_match = re.search(time_pattern, line)
-                if time_match:
-                    found_time = time_match.group()
-        date_time = f"{found_date if found_date else ''} {found_time if found_time else ''}".strip()
+        parts = re.split(price_pattern, line)
+        item_name = parts[0].strip() or previous_item
 
-        # Parse item if $ present
-        if "$" in line:
-            parts = line.split("$", 1)
-            item_name_part = parts[0].strip()
-            price = parts[1].strip()
-            item_name = item_name_part if len(item_name_part) > 1 else previous_item_name
-            items.append({"Item": item_name, "Price": price})
-            previous_item_name = item_name
+        # Normalize sign and format price
+        sign = "-" if "-" in price_match.group(1) else ""
+        price = f"{sign}${price_match.group(2)}"
 
-            # Check if line is Order Total
-            if re.search(r"order total", item_name, re.IGNORECASE):
-                total_price = price
-                break  # stop parsing after Order Total
+        items.append({"Item": item_name, "Price": price})
+        previous_item = item_name
 
-        else:
-            previous_item_name = line  # store previous line for next item
+        # Stop if "Order Total" line is found
+        if re.search(r"order\s*total", item_name, re.IGNORECASE):
+            total_price = price
+            break
 
-    return date_time, items, total_price
+    return date_time, items, total_price, grouped_df
 
 
 
@@ -130,13 +156,13 @@ if uploaded_file is not None:
             else:
                 parsed_text = result["ParsedResults"][0]["ParsedText"]
 
+                # Parse receipt safely with total check
+                date_time, items, total_price, grouped_df = parse_receipt_safe_total(parsed_text)
+
                 # Toggle to show original OCR text
                 with st.expander("Show original OCR text"):
                     st.subheader("Full OCR Text:")
-                    st.text(result["ParsedResults"][0])
-
-                # Parse receipt safely with total check
-                date_time, items, total_price = parse_receipt_safe_total(parsed_text)
+                    st.text(grouped_df)
 
                 st.subheader("Receipt Summary:")
                 st.write(f"**Date/Time:** {date_time if date_time else 'Unknown'}")
