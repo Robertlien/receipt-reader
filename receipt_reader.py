@@ -129,8 +129,8 @@ if uploaded_file is not None:
 
     compressed_image = compress_image(image)
     compressed_size = len(compressed_image.getvalue()) / 1024
-    st.write(f"📦 Compressed image size: {compressed_size:.1f} KB")
-
+    st.caption(f"📦 Compressed image size: {compressed_size:.1f} KB")
+    
     url_api = "https://api.ocr.space/parse/image"
 
     payload = {
