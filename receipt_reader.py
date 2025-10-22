@@ -17,7 +17,7 @@ with st.expander("Select OCR API 🔑", expanded=False):
     else:
         api_key = st.secrets["OCR_SPACE_API_KEY_2"]
 
-    st.markdown(f"**_✅ {selected_key} activated_**")
+    st.markdown(f"**{selected_key} activated_**")
 uploaded_file = st.file_uploader("", help="Please upload an image file under 1 MB.")
 
 
