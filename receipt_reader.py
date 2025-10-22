@@ -169,23 +169,15 @@ if uploaded_file is not None:
                 with col2:
                     st.markdown(
                         f"""
-                        <div style='display:flex; align-items:flex-end; height:40px; color:gray; font-size:14px;'>
-                            Date/Time: {date_time if date_time else 'Unknown'}
+                        <div style='display:flex; justify-content:space-between; align-items:flex-end; height:40px; color:gray; font-size:14px;'>
+                            <span>🕒 Date/Time: {date_time if date_time else 'Unknown'}</span>
+                            <span>💰 Total: {total_price if total_price else 'N/A'}</span>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-                    if total_price:
-                        st.markdown(
-                            f"""
-                            <div style='display:flex; justify-content:flex-end; align-items:flex-end; height:40px; color:gray; font-size:14px;'>
-                                💰 Total: {total_price}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                if items:
-                    st.table(items)
+                                if items:
+                                    st.table(items)
                     
                 # Toggle to show original OCR text
                 with st.expander("Show original OCR text"):
