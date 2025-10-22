@@ -170,7 +170,7 @@ if uploaded_file is not None:
                     st.markdown(
                         f"""
                         <div style='display:flex; justify-content:space-between; align-items:flex-end; height:40px; font-size:16px;'>
-                            <span><i>Date/Time: {date_time if date_time else 'Unknown'}</i></span>
+                            <span><i> {date_time if date_time else 'Unknown'}</i></span>
                             <span><i>Total: {total_price if total_price else 'N/A'}</i></span>
                         </div>
                         """,
