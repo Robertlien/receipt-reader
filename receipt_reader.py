@@ -7,16 +7,17 @@ import re
 st.title("🧾 Receipt Reader")
 with st.expander("Select OCR API 🔑", expanded=False):
     selected_key = st.radio(
-        "",
-        ("Key 1", "Key 2")
+        "Select API Key",  # Add a small label (optional)
+        ("Key 1", "Key 2"),
+        label_visibility="collapsed"  # hides the label to remove space
     )
 
     if selected_key == "Key 1":
         api_key = st.secrets["OCR_SPACE_API_KEY_1"]
-    elif selected_key == "Key 2":
+    else:
         api_key = st.secrets["OCR_SPACE_API_KEY_2"]
 
-    st.markdown(f"**Active Key:** {selected_key}")
+    st.markdown(f"**_✅ {selected_key} activated_**")
 uploaded_file = st.file_uploader("", help="Please upload an image file under 1 MB.")
 
 
