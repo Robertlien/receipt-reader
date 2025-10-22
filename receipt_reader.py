@@ -78,13 +78,13 @@ def parse_receipt_safe_total(text):
             parts = line.split("$", 1)
             item_name_part = parts[0].strip()
             price = parts[1].strip()
-            item_name = item_name_part if item_name_part else previous_item_name
-            items.append({"Item": item_name, "Price": f"${price}"})
+            item_name = item_name_part if len(item_name_part) > 1 else previous_item_name
+            items.append({"Item": item_name, "Price": price})
             previous_item_name = item_name
 
             # Check if line is Order Total
             if re.search(r"order total", item_name, re.IGNORECASE):
-                total_price = f"${price}"
+                total_price = price
                 break  # stop parsing after Order Total
 
         else:
