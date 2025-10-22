@@ -132,7 +132,7 @@ if uploaded_file is not None:
                 # Toggle to show original OCR text
                 with st.expander("Show original OCR text"):
                     st.subheader("Full OCR Text:")
-                    st.text(parsed_text)
+                    st.text(result["ParsedResults"][0])
 
                 # Parse receipt safely with total check
                 date_time, items, total_price = parse_receipt_safe_total(parsed_text)
