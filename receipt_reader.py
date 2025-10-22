@@ -166,8 +166,7 @@ if uploaded_file is not None:
 
                 with col1:
                     st.markdown(
-                        f"<h4 style='font-size:18px;'>Date/Time: "
-                        f"{date_time if date_time else 'Unknown'}</h4>",
+                        st.caption(f"Date/Time: {date_time} if {date_time} else 'Unknown'}"),
                         unsafe_allow_html=True
                     )
                 
